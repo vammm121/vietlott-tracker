@@ -1,7 +1,17 @@
 # Vietlott Mega 6/45 - Tracker + Du doan + Tu kiem chung
 
+[![Update results and deploy dashboard](https://github.com/vammm121/vietlott-tracker/actions/workflows/update.yml/badge.svg)](https://github.com/vammm121/vietlott-tracker/actions/workflows/update.yml)
+
+**Dashboard:** https://vammm121.github.io/vietlott-tracker/
+**Du lieu:** https://vammm121.github.io/vietlott-tracker/data.csv
+
 Cong cu theo doi ky quay, sinh du doan bang 9 model, va **tu cham diem chinh no**
 bang walk-forward (chi dung du lieu truoc moi ky).
+
+## Tu dong hoa tren GitHub
+
+Actions chay 3 lan/tuan (Thu 4, Thu 6, CN luc 11:20 UTC = 18:20 VN), tai ket qua,
+cham diem, commit du lieu va deploy Pages. Xem `.github/workflows/update.yml`.
 
 ## Cai dat
 
