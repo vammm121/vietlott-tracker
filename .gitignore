@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+_*.py
+_*.csv
+_*.json
+_*.html
+_*.png
+verify.txt
+report.txt
+public/

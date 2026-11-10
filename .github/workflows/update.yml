@@ -1,0 +1,87 @@
+name: Update results and deploy dashboard
+
+on:
+  schedule:
+    # Mega 6/45: Wed / Fri / Sun 18:05 ICT = 11:05 UTC. Run 20 min later.
+    - cron: "20 11 * * 0,3,5"
+    # Safety net every day at 02:00 UTC
+    - cron: "0 2 * * *"
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "vietlott_tracker.py"
+      - ".github/workflows/update.yml"
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Fetch new draws
+        run: python vietlott_tracker.py update
+
+      - name: Self-verification
+        run: |
+          python vietlott_tracker.py verify | tee verify.txt
+          {
+            echo "## Tu kiem chung (walk-forward)"
+            echo '```'
+            cat verify.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Build dashboard
+        run: |
+          python vietlott_tracker.py dashboard
+          python vietlott_tracker.py report | tee report.txt
+          mkdir -p public
+          cp vietlott_dashboard.html public/index.html
+          cp vietlott_mega645_full_history.csv public/data.csv
+          cp report.txt public/report.txt
+
+      - name: Commit data
+        id: commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add vietlott_mega645_full_history.csv vietlott_predictions.json vietlott_dashboard.html
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            git commit -m "data: update $(date -u +%Y-%m-%dT%H:%MZ)"
+            git push
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
