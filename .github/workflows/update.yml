@@ -82,12 +82,23 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add vietlott_mega645_full_history.csv vietlott_predictions.json vietlott_dashboard.html
           git add vietlott_power655_full_history.csv vietlott_power655_predictions.json vietlott_power655_dashboard.html
-          if ! git diff --cached --quiet; then
-            git commit -m "data: update mega+power $(date -u +%Y-%m-%dT%H:%MZ)"
-            git push
-          else
+          if git diff --cached --quiet; then
             echo "khong co thay doi du lieu"
+            exit 0
           fi
+          git commit -m "data: update mega+power $(date -u +%Y-%m-%dT%H:%MZ)"
+          # neu run khac vua push thi rebase roi push lai
+          for i in 1 2 3; do
+            if git push; then
+              echo "pushed"
+              exit 0
+            fi
+            echo "push that bai, thu lai lan $i"
+            sleep $((i * 5))
+            git pull --rebase --autostash -q || true
+          done
+          echo "::error::khong the push sau 3 lan thu"
+          exit 1
 
       - uses: actions/upload-pages-artifact@v3
         with:
