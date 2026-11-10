@@ -7,7 +7,8 @@
 | Mega 6/45 | https://vammm121.github.io/vietlott-tracker/ | [data.csv](https://vammm121.github.io/vietlott-tracker/data.csv) |
 | Power 6/55 | https://vammm121.github.io/vietlott-tracker/power/ | [power/data.csv](https://vammm121.github.io/vietlott-tracker/power/data.csv) |
 
-Hai cong cu doc lap (chi dung thu vien chuan Python): theo doi ky quay, sinh du doan
+Hai cong cu doc lap (chi dung thu vien chuan Python; rieng `vietlott_analyze.py`
+can `numpy` + `scipy`): theo doi ky quay, sinh du doan
 bang 9 model, va **tu cham diem chinh no** bang walk-forward (chi dung du lieu truoc moi ky).
 
 ## Hai game
@@ -77,16 +78,16 @@ python vietlott_power655.py update | report | dashboard
 ## Ket qua tu kiem chung (250 ky gan nhat, 13.500 lan chon)
 
 ```
-model         ky  trung    ty le CI95               p (H0 13.33%)
-cold_100     250    209   13.93% [12.21%,15.65%] 0.247
-markov       250    207   13.80% [12.08%,15.52%] 0.297
-overdue      250    203   13.53% [11.81%,15.25%] 0.410
-random       250    200   13.33% [11.61%,15.05%] 0.500
-hot_all      250    199   13.27% [11.55%,14.99%] 0.530
-hot_100      250    199   13.27% [11.55%,14.99%] 0.530
-decay        250    198   13.20% [11.48%,14.92%] 0.560
-hot_30       250    189   12.60% [10.88%,14.32%] 0.798
-balanced     250    186   12.40% [10.68%,14.12%] 0.856
+model         ky  trung    ty le CI95               p p_Holm
+cold_100     250    209   13.93% [12.21%,15.65%] 0.247 1.000
+markov       250    207   13.80% [12.08%,15.52%] 0.297 1.000
+overdue      250    203   13.53% [11.81%,15.25%] 0.410 1.000
+random       250    200   13.33% [11.61%,15.05%] 0.500 1.000
+hot_all      250    199   13.27% [11.55%,14.99%] 0.530 1.000
+hot_100      250    199   13.27% [11.55%,14.99%] 0.530 1.000
+decay        250    198   13.20% [11.48%,14.92%] 0.560 1.000
+hot_30       250    189   12.60% [10.88%,14.32%] 0.798 1.000
+balanced     250    186   12.40% [10.68%,14.12%] 0.856 1.000
 ```
 
 **Khong model nao co loi the.** Ky vong ngau nhien la 6/45 = 13.33%;
@@ -130,13 +131,12 @@ lambda JP2  lam2  = 6 * lam1   (thuc te hoi thap hon vi nguoi choi chon so DB ke
 EV          EV    = 1.345 + 0.9*J1/C*s(lam1) + 0.9*6*J2/C*s(lam2)
 ```
 
-Power 07/11/2026: 1,56 trieu ve -> hoa von khi **J1 >= 285 ty** (J1 trung binh 83 ty, p99 = 318 ty).
+Power 07/11/2026: 1,56 trieu ve -> hoa von khi **J1 >= 254 ty** (tinh ca JP2;
+J1 trung binh 83 ty, p99 = 318 ty).
 Mega hoa von ~82 ty (J trung binh ~30 ty, >= 100 ty chi 1,6% so ky).
 
 ## File
 
-| File | Noi dung |
-|---|---|
 | File | Noi dung |
 |---|---|
 | `vietlott_mega645_full_history.csv` | Mega: 1.586 ky (20/07/2016 -> 08/11/2026) |

@@ -173,14 +173,14 @@ def draw_days(history):
 
 
 def next_draw(last_date, days):
-    now = datetime.now(ICT)
+    """Ky quay ke tiep sau last_date.
+
+    Khong so voi gio hien tai: neu ket qua ky hom nay chua ve thi day chinh la
+    ky dang cho, khong phai ky sau.
+    """
     d = last_date + timedelta(days=1)
     while d.weekday() not in days:
         d += timedelta(days=1)
-    while datetime(d.year, d.month, d.day, 18, 5, tzinfo=ICT) <= now:
-        d += timedelta(days=1)
-        while d.weekday() not in days:
-            d += timedelta(days=1)
     return datetime(d.year, d.month, d.day, 18, 5, tzinfo=ICT)
 
 
@@ -197,6 +197,17 @@ def ev_model(j1, j2, tickets):
     ev2 = (1 - PIT) * j2 * P_J2 * s2
     return {"lam1": lam1, "lam2": lam2, "ev1": ev1, "ev2": ev2,
             "total": FIXED_EV + ev1 + ev2}
+
+
+def breakeven_j1(j2, tickets, lo=1e6, hi=1e12):
+    """J1 hoa von khi tinh ca JP2 (JP2 giu co dinh), giai so hoc."""
+    for _ in range(80):
+        mid = (lo + hi) / 2.0
+        if ev_model(mid, j2, tickets)["total"] < TICKET:
+            lo = mid
+        else:
+            hi = mid
+    return lo
 
 
 def ev_verdict(ev):
@@ -350,11 +361,17 @@ def load_pred():
             rows = json.load(f)
     except Exception:
         return []
+    seen, out = set(), []
     for r in rows:
         r.setdefault("late", False)
         r.setdefault("draw_id", "")
         r.setdefault("created_at", "unknown")
-    return rows
+        key = (r.get("draw_date"), r.get("model"))
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(r)
+    return out
 
 
 def save_pred(rows):
@@ -367,27 +384,43 @@ def record_next(history):
         return 0
     last = history[-1]
     nd = next_draw(date.fromisoformat(last["draw_date"]), draw_days(history))
+    ndate = nd.date().isoformat()
     did = str(int(last["draw_id"]) + 1).zfill(5)
     rows = load_pred()
-    have = {(r.get("draw_id"), r["model"]) for r in rows}
+
+    # Sua draw_id cua du doan cu theo ngay thuc te (truong hop ky bi lech)
+    bydate = {r["draw_date"]: r["draw_id"] for r in history}
+    changed = False
+    for r in rows:
+        real = bydate.get(r.get("draw_date"))
+        if real and r.get("draw_id") != real:
+            r["draw_id"] = real
+            changed = True
+
+    have = {(r.get("draw_date"), r["model"]) for r in rows}
     late = datetime.now(ICT) >= nd
     added = 0
     for row in draw_iv(history, len(history)):
-        if (did, row["model"]) in have:
+        if (ndate, row["model"]) in have:
             continue
-        rows.append({"draw_id": did, "draw_date": nd.date().isoformat(),
+        rows.append({"draw_id": did, "draw_date": ndate,
                      "model": row["model"], "ticket": row["ticket"],
                      "special": row["special"], "late": late,
                      "created_at": datetime.now(ICT).isoformat(timespec="seconds")})
         added += 1
-    if added:
+        changed = True
+    if changed:
         save_pred(rows)
     return added
 
 
 def cmd_update(quiet=False):
     history = load_history()
-    fresh = parse_page(fetch(BASE + ".html"))
+    try:
+        fresh = parse_page(fetch(BASE + ".html"))
+    except Exception as e:
+        print("Khong tai duoc du lieu tu nguon: %s" % e)
+        return history, []
     if not fresh:
         print("Khong parse duoc du lieu tu nguon.")
         return history, []
@@ -425,12 +458,11 @@ def cmd_backfill(history):
                 d -= timedelta(days=1)
                 continue
             pages += 1
-            if rows:
-                fresh = [r for r in rows if r["draw_date"] not in known]
-                if fresh:
-                    history, added = merge(history, fresh)
-                    added_total += len(added)
-                    known |= {r["draw_date"] for r in fresh}
+            fresh = [r for r in rows if r["draw_date"] not in known]
+            if fresh:
+                history, added = merge(history, fresh)
+                added_total += len(added)
+                known |= {r["draw_date"] for r in fresh}
                 oldest = min(date.fromisoformat(r["draw_date"]) for r in rows)
                 if pages % 10 == 0:
                     save_history(history)
@@ -440,6 +472,7 @@ def cmd_backfill(history):
                 if days is None:
                     days = draw_days(history)
                 continue
+            # trang khong co ky nao moi -> chi lui mot ngay, tranh dung yen
         d -= timedelta(days=1)
     save_history(history)
     print("Backfill xong: %d ky, %d trang da tai." % (len(history), pages))
@@ -472,15 +505,16 @@ def cmd_report(history):
     print("  lambda J2  : %.4f nguoi trung ky vong" % ev["lam2"])
     print("  EV         : %.0f d/ve = co dinh %.0f + JP1 %.0f + JP2 %.0f  -> %s"
           % (ev["total"], FIXED_EV, ev["ev1"], ev["ev2"], ev_verdict(ev["total"])))
-    be = (TICKET - FIXED_EV) * C / ((1 - PIT) * max((1 - math.exp(-ev["lam1"])) / ev["lam1"], 1e-9))
-    print("  hoa von khi J1 >= %.1f ty (gia dinh J2 = %.1f ty)"
+    be = breakeven_j1(last["jackpot2"], tk3)
+    print("  hoa von khi J1 >= %.1f ty (tinh ca JP2 = %.1f ty)"
           % (be / 1e9, last["jackpot2"] / 1e9))
     print("")
     print("DU DOAN KY #%s (%s)" % (str(int(last["draw_id"]) + 1).zfill(5), nd.strftime("%Y-%m-%d")))
-    for r in draw_iv(history, len(history)):
+    preds = draw_iv(history, len(history))
+    for r in preds:
         print("  %-9s %s" % (r["model"], fmt(r["ticket"], r["special"])))
-    cons = Counter(n for r in draw_iv(history, len(history)) for n in r["ticket"])
-    cons_sp = Counter(r["special"] for r in draw_iv(history, len(history)))
+    cons = Counter(n for r in preds for n in r["ticket"])
+    cons_sp = Counter(r["special"] for r in preds)
     print("  %-9s %s | %02d   <- dong thuan"
           % ("consensus", fmt(sorted(cons, key=lambda n: -cons[n])[:6]),
              cons_sp.most_common(1)[0][0]))
@@ -803,6 +837,9 @@ def cmd_dashboard(history):
     freq = Counter(n for r in history for n in r["nums"])
     spf = Counter(r["special"] for r in history)
     sums = [sum(r["nums"]) for r in history]
+    exp6 = len(history) * 6 / MAXN
+    chi2_p = 1 - chi2_cdf(
+        sum((freq.get(i, 0) - exp6) ** 2 / exp6 for i in range(1, MAXN + 1)), MAXN - 1)
 
     bins = [0] * 13
     lo_s, hi_s = 6, 6 * MAXN
@@ -835,10 +872,12 @@ def cmd_dashboard(history):
     rows_ver = "".join(
         "<tr><td>%s</td><td class='num'>%d</td><td class='num'>%d</td>"
         "<td class='num'>%.2f%%</td><td class='num muted'>[%.2f%%, %.2f%%]</td>"
-        "<td>%s</td><td class='num'>%.2f%%</td><td>%s</td></tr>"
+        "<td>%s</td><td>%s</td><td class='num'>%.2f%%</td><td>%s</td><td>%s</td></tr>"
         % (r["model"], r["draws"], r["hits"], 100 * r["rate"], 100 * r["lo"],
            100 * r["hi"], tag(r["p"] >= 0.05, "p=%.3f" % r["p"]),
-           100 * r["sp_rate"], tag(r["sp_p"] >= 0.05, "p=%.3f" % r["sp_p"]))
+           tag(r["p_holm"] >= 0.05, "H=%.3f" % r["p_holm"]),
+           100 * r["sp_rate"], tag(r["sp_p"] >= 0.05, "p=%.3f" % r["sp_p"]),
+           tag(r["sp_holm"] >= 0.05, "H=%.3f" % r["sp_holm"]))
         for r in vrows)
     cons = Counter(n for r in preds for n in r["ticket"])
     cons_sp = Counter(r["special"] for r in preds).most_common(1)[0][0]
@@ -852,7 +891,7 @@ def cmd_dashboard(history):
         "</style></head><body><div class='wrap'>"
         "<h1>Vietlott <span>Power 6/55</span> - Tracker</h1>"
         "<div class='sub'>Cap nhat %s (ICT) &middot; %d ky &middot; %s &rarr; %s "
-        "&middot; <a href='index.html'>Mega 6/45</a></div>"
+        "&middot; <a href='../index.html'>Mega 6/45</a></div>"
         % (datetime.now(ICT).strftime("%Y-%m-%d %H:%M"), len(history),
            history[0]["draw_date"], last["draw_date"]) +
         "<div class='grid'>"
@@ -881,8 +920,8 @@ def cmd_dashboard(history):
            cons_sp, rows_pred) +
         "<div class='panel'><h3>Tu kiem chung (walk-forward)</h3>"
         "<table><thead><tr><th>Model</th><th class='num'>Ky</th><th class='num'>Trung</th>"
-        "<th class='num'>Ty le</th><th class='num'>CI95</th><th>p (H0 10.91%%)</th>"
-        "<th class='num'>So DB</th><th>p</th></tr></thead><tbody>%s</tbody></table>"
+        "<th class='num'>Ty le</th><th class='num'>CI95</th><th>p</th><th>p_Holm</th>"
+        "<th class='num'>So DB</th><th>p</th><th>p_Holm</th></tr></thead><tbody>%s</tbody></table>"
         "<div class='muted' style='margin-top:10px'>Ky vong: 6/55 = 10.91%% moi so, "
         "so dac biet 1/55 = 1.82%%. p &gt; 0.05 = khong co loi the.</div></div>" % rows_ver +
         "<div class='grid' style='grid-template-columns:1fr 1fr'>"
@@ -909,7 +948,7 @@ def cmd_dashboard(history):
         "<div class='muted' style='margin-top:10px'>6 so khong co quy luat: "
         "chi2 p=%.3f, ACF ~0.</div></div>"
         "</div></body></html>"
-        % (P_G3, CALIB, C, FIXED_EV, format(C, ","), format(C, ","), 0.0))
+        % (P_G3, CALIB, C, FIXED_EV, format(C, ","), format(C, ","), chi2_p))
     with open(HTML, "w", encoding="utf-8") as f:
         f.write(html)
     print("Da xuat %s (%d KB)." % (HTML, os.path.getsize(HTML) // 1024))
