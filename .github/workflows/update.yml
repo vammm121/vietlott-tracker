@@ -2,15 +2,18 @@ name: Update results and deploy dashboard
 
 on:
   schedule:
-    # Mega 6/45: Wed / Fri / Sun 18:05 ICT = 11:05 UTC. Run 20 min later.
+    # Mega 6/45 quay Thu 4 / Thu 6 / CN 18:05 ICT = 11:05 UTC
     - cron: "20 11 * * 0,3,5"
-    # Safety net every day at 02:00 UTC
-    - cron: "0 2 * * *"
+    # Power 6/55 quay Thu 3 / Thu 5 / Thu 7 18:05 ICT = 11:05 UTC
+    - cron: "20 11 * * 2,4,6"
+    # Luoi an toan moi ngay
+    - cron: "5 2 * * *"
   workflow_dispatch:
   push:
     branches: [main]
     paths:
       - "vietlott_tracker.py"
+      - "vietlott_power655.py"
       - ".github/workflows/update.yml"
 
 permissions:
@@ -25,8 +28,6 @@ concurrency:
 jobs:
   update:
     runs-on: ubuntu-latest
-    outputs:
-      changed: ${{ steps.commit.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,40 +37,56 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Fetch new draws
+      - name: Fetch new draws (Mega 6/45)
         run: python vietlott_tracker.py update
+
+      - name: Fetch new draws (Power 6/55)
+        run: python vietlott_power655.py update
 
       - name: Self-verification
         run: |
-          python vietlott_tracker.py verify | tee verify.txt
+          python vietlott_tracker.py verify | tee verify-mega.txt
+          python vietlott_power655.py verify | tee verify-power.txt
           {
-            echo "## Tu kiem chung (walk-forward)"
+            echo "## Mega 6/45"
             echo '```'
-            cat verify.txt
+            cat verify-mega.txt
+            echo '```'
+            echo "## Power 6/55"
+            echo '```'
+            cat verify-power.txt
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Build dashboard
+      - name: Build dashboards
         run: |
           python vietlott_tracker.py dashboard
-          python vietlott_tracker.py report | tee report.txt
-          mkdir -p public
-          cp vietlott_dashboard.html public/index.html
+          python vietlott_tracker.py report | tee report-mega.txt
+          python vietlott_power655.py dashboard
+          python vietlott_power655.py report | tee report-power.txt
+          rm -rf public
+          mkdir -p public/power
+          cp vietlott_dashboard.html   public/index.html
           cp vietlott_mega645_full_history.csv public/data.csv
-          cp report.txt public/report.txt
+          cp report-mega.txt public/report.txt
+          cp verify-mega.txt public/verify.txt
+          cp vietlott_power655_dashboard.html public/power/index.html
+          cp vietlott_power655_full_history.csv public/power/data.csv
+          cp report-power.txt public/power/report.txt
+          cp verify-power.txt public/power/verify.txt
+          ls -R public
 
       - name: Commit data
-        id: commit
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add vietlott_mega645_full_history.csv vietlott_predictions.json vietlott_dashboard.html
-          if git diff --cached --quiet; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          else
-            git commit -m "data: update $(date -u +%Y-%m-%dT%H:%MZ)"
+          git add vietlott_power655_full_history.csv vietlott_power655_predictions.json vietlott_power655_dashboard.html
+          if ! git diff --cached --quiet; then
+            git commit -m "data: update mega+power $(date -u +%Y-%m-%dT%H:%MZ)"
             git push
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "khong co thay doi du lieu"
           fi
 
       - uses: actions/upload-pages-artifact@v3
