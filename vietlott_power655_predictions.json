@@ -36286,5 +36286,149 @@
   "special": 1,
   "late": false,
   "created_at": "2026-11-11T01:41:24+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "random",
+  "ticket": [
+   4,
+   5,
+   18,
+   22,
+   35,
+   47
+  ],
+  "special": 6,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "hot_all",
+  "ticket": [
+   8,
+   22,
+   29,
+   34,
+   41,
+   51
+  ],
+  "special": 50,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "hot_100",
+  "ticket": [
+   1,
+   7,
+   8,
+   9,
+   18,
+   22
+  ],
+  "special": 50,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "hot_30",
+  "ticket": [
+   7,
+   11,
+   18,
+   24,
+   25,
+   27
+  ],
+  "special": 50,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "cold_100",
+  "ticket": [
+   6,
+   12,
+   35,
+   36,
+   37,
+   43
+  ],
+  "special": 9,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "markov",
+  "ticket": [
+   7,
+   8,
+   22,
+   32,
+   41,
+   53
+  ],
+  "special": 18,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "overdue",
+  "ticket": [
+   3,
+   8,
+   15,
+   32,
+   47,
+   48
+  ],
+  "special": 19,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "decay",
+  "ticket": [
+   8,
+   13,
+   22,
+   34,
+   39,
+   41
+  ],
+  "special": 45,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
+ },
+ {
+  "draw_id": "01424",
+  "draw_date": "2026-11-14",
+  "model": "balanced",
+  "ticket": [
+   1,
+   8,
+   22,
+   29,
+   52,
+   53
+  ],
+  "special": 36,
+  "late": false,
+  "created_at": "2026-11-13T01:57:40+07:00"
  }
 ]
