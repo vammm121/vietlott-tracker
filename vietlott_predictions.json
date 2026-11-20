@@ -34423,5 +34423,140 @@
   ],
   "late": false,
   "created_at": "2026-11-19T02:27:01+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "random",
+  "ticket": [
+   4,
+   12,
+   13,
+   23,
+   32,
+   33
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "hot_all",
+  "ticket": [
+   7,
+   10,
+   19,
+   24,
+   37,
+   44
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "hot_100",
+  "ticket": [
+   6,
+   9,
+   16,
+   31,
+   36,
+   41
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "hot_30",
+  "ticket": [
+   1,
+   2,
+   10,
+   20,
+   40,
+   41
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "cold_100",
+  "ticket": [
+   5,
+   8,
+   18,
+   19,
+   23,
+   34
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "markov",
+  "ticket": [
+   5,
+   10,
+   20,
+   32,
+   44,
+   45
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "overdue",
+  "ticket": [
+   4,
+   8,
+   13,
+   16,
+   35,
+   42
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "decay",
+  "ticket": [
+   16,
+   20,
+   22,
+   28,
+   31,
+   36
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
+ },
+ {
+  "draw_id": "01592",
+  "draw_date": "2026-11-22",
+  "model": "balanced",
+  "ticket": [
+   7,
+   13,
+   20,
+   24,
+   36,
+   37
+  ],
+  "late": false,
+  "created_at": "2026-11-21T02:09:56+07:00"
  }
 ]
